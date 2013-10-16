@@ -1,5 +1,4 @@
 <?php
-
 class TortoiseLabs{
 
     public $vps;
@@ -56,7 +55,7 @@ class TortoiseLabs{
         }
         if($method === "POST"){
             $headers[] = "Content-type: application/x-www-form-urlencoded";
-            $headers[] = 'Content-Length: ' . strlen($params);
+            $headers[] = 'Content-Length: ' . strlen($p);
         }
         $options = array(
             'http' => array_merge(array(
@@ -66,8 +65,21 @@ class TortoiseLabs{
         );
         $context = stream_context_create($options);
 
-        $data = fopen($location . $file . $method === 'GET' ? '?' . $p : '', 'r', false, $context); // Also yuck.
+        $r = fopen($location . $file . ($method === 'GET' && $p != '' ? '?' . $p : ''), 'r', false, $context); // Also yuck.
+        $data = stream_get_contents($r);
+        fclose($r);
         return $data;
+    }
+
+    public function json_get($file){
+        return json_decode($this->sendRequest($file), true);
+    }
+    public function json_post($file, $params){
+        return json_decode($this->sendRequest($file, true, 'POST', $params), true);
+    }
+    public function action_post($file, $params){
+        $this->sendRequest($file, true, 'POST', $params);
+        return true;
     }
 }
 
@@ -85,7 +97,7 @@ class VPS {
      * Renamed from list because 'list' is a reserved word.
      */
     public function list_all(){
-        return json_decode($this->tl->sendRequest('/vps/list/'));
+        return $this->tl->json_get('/vps/list');
     }
 
     /**
@@ -93,7 +105,7 @@ class VPS {
      * @return array http://wiki.tortois.es/index/API#.2Fvps.2Fsignup regions, plans
      */
     public function signup_available(){
-        return json_decode($this->tl->sendRequest('/vps/signup/'));
+        return $this->tl->json_get('/vps/signup');
     }
 
     /**
@@ -103,8 +115,8 @@ class VPS {
      * @return bool success
      */
     public function signup($plan, $region){
-        $this->tl->sendRequest('/vps/signup/', true, 'POST', array('plan'=>$plan,'region'=>$region));
-        return true;
+        return $this->tl->action_post('/vps/signup', array('plan'=>$plan,'region'=>$region));
+
     }
 
     /**
@@ -113,7 +125,7 @@ class VPS {
      * @return array http://wiki.tortois.es/index/API#.2Fvps.2F.3Cid.3E vps information
      */
     public function info($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/'));
+        return $this->tl->json_get('/vps/' . $id . '');
     }
 
     /**
@@ -122,7 +134,7 @@ class VPS {
      * @return array array of template names, and services
      */
     public function deploy_templates($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/deploy/'));
+        return $this->tl->json_get('/vps/' . $id . '/deploy');
     }
 
     /**
@@ -131,9 +143,10 @@ class VPS {
      * @param $image string The image you're installing
      * @param $pass string Your new Root Password
      * @param $arch string Your Arch.
+     * @return array Jobs
      */
     public function deploy($id, $image, $pass, $arch){
-        $this->tl->sendRequest('/vps/' . $id . '/deploy', true, 'POST', array('imagename'=>$image,'rootpass'=>$pass,'arch'=>$arch));
+        return $this->tl->json_post('/vps/' . $id . '/deploy', array('imagename'=>$image,'rootpass'=>$pass,'arch'=>$arch));
     }
 
     /**
@@ -143,17 +156,16 @@ class VPS {
      * @return array nickname (Friendly name), name
      */
     public function setNickname($id, $nickname){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/setnickname/', true, 'POST', array('nickname'=>$nickname)));
+        return $this->tl->json_post('/vps/' . $id . '/setnickname', array('nickname'=>$nickname));
     }
 
     /**
      * Enable Watchdog monitoring
      * @param $id int The ID of the vps you're watching
-     * @return bool If the response was successful
+     * @return array VPS Info
      */
     public function monitoring_enable($id){
-        $this->tl->sendRequest('/vps/' . $id . '/monitoring/enable/');
-        return true;
+        return $this->tl->json_get('/vps/' . $id . '/monitoring/enable');
     }
 
     /**
@@ -162,8 +174,7 @@ class VPS {
      * @return bool if the response was successful
      */
     public function monitoring_disable($id){
-        $this->tl->sendRequest('/vps/' . $id . '/monitoring/disable/');
-        return true;
+        return $this->tl->json_get('/vps/' . $id . '/monitoring/disable');
     }
 
     /**
@@ -172,7 +183,7 @@ class VPS {
      * @return array The available ISOs for HVM
      */
     public function hvm($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/hvm/'));
+        return $this->tl->json_get('/vps/' . $id . '/hvm');
     }
 
     /**
@@ -182,7 +193,7 @@ class VPS {
      * @return array The available ISOs for HVM
      */
     public function hvm_setiso($id, $iso){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/hvm/setiso/', true, 'POST', array('isoid'=>$iso)));
+        return $this->tl->json_get('/vps/' . $id . '/hvm/setiso', array('isoid'=>$iso));
     }
 
     /**
@@ -192,7 +203,7 @@ class VPS {
      * @return array The available ISOs for HVM
      */
     public function hvm_setBootOrder($id, $bootorder){
-        return json_encode($this->tl->sendRequest('/vps/' . $id . '/hvm/setbootorder/', true, 'POST', array('bootorder'=>$bootorder)));
+        return $this->tl->json_post('/vps/' . $id . '/hvm/setbootorder', array('bootorder'=>$bootorder));
     }
 
     /**
@@ -202,7 +213,7 @@ class VPS {
      * @return array The available ISOs for HVM
      */
     public function hvm_setNicType($id, $nicktype){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/hvm/setnictype/', true, 'POST', array('nicktype'=>$nicktype)));
+        return $this->tl->json_post('/vps/' . $id . '/hvm/setnictype', array('nicktype'=>$nicktype));
     }
 
     /**
@@ -213,7 +224,7 @@ class VPS {
      * @return array The available ISOs for HVM
      */
     public function hvmISO_new($id, $name, $uri){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/hvmiso/new/', true, 'POST', array('isoname'=>$name,'isouri'=>$uri)));
+        return $this->tl->json_post('/vps/' . $id . '/hvmiso/new', array('isoname'=>$name,'isouri'=>$uri));
     }
 
     /**
@@ -223,7 +234,7 @@ class VPS {
      * @return array The available ISOs for HVM
      */
     public function hvmISO_delete($id, $isoid){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/hvmiso/' . $isoid . '/delete/'));
+        return $this->tl->json_get('/vps/' . $id . '/hvmiso/' . $isoid . '/delete');
     }
 
     /**
@@ -232,7 +243,7 @@ class VPS {
      * @return string Job
      */
     public function create($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/create/'));
+        return $this->tl->json_get('/vps/' . $id . '/create');
     }
 
     /**
@@ -241,7 +252,7 @@ class VPS {
      * @return int Job
      */
     public function shutdown($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/shutdown/'));
+        return $this->tl->json_get('/vps/' . $id . '/shutdown');
     }
 
     /**
@@ -250,7 +261,7 @@ class VPS {
      * @return int Job
      */
     public function destroy($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/destroy/'));
+        return $this->tl->json_get('/vps/' . $id . '/destroy');
     }
 
     /**
@@ -259,7 +270,7 @@ class VPS {
      * @return int Job
      */
     public function powerCycle($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/powercycle/'));
+        return $this->tl->json_get('/vps/' . $id . '/powercycle');
     }
 
     /**
@@ -268,7 +279,7 @@ class VPS {
      * @return array ("running" => boolean)
      */
     public function status($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/status.json'));
+        return $this->tl->json_get('/vps/' . $id . '/status.json');
     }
 
     /**
@@ -277,7 +288,7 @@ class VPS {
      * @return array All Jobs
      */
     public function jobs($id){
-        return json_decode($this->tl->sendRequest('/vps/' . $id . '/jobs.json'));
+        return $this->tl->json_get('/vps/' . $id . '/jobs.json');
     }
 }
 class Support {
