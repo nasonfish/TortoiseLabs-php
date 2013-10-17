@@ -101,6 +101,20 @@ class VPS {
     }
 
     /**
+     * List all of your vps', as array(id => name)
+     *
+     * @return Array array of $myarray[vps_id] = vps_name
+     */
+    public function list_my(){
+        $return = array();
+        $list = $this->list_all();
+        foreach($list['vpslist'] as $vps){
+            $return[$vps['id']] = $vps['name'];
+        }
+        return $return;
+    }
+
+    /**
      * Return the available regions and plans for creating a new VPS
      * @return array http://wiki.tortois.es/index/API#.2Fvps.2Fsignup regions, plans
      */

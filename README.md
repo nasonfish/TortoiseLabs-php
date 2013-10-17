@@ -1,6 +1,6 @@
 ## TortoiseLabs-php
 
-*TortoiseLabs-php* is a small and simple framework for accessing [TortoiseLabs](http://tortois.es/)' API. TortoiseLabs-php is made with only one file, and should be easy to use for controlling your account through the API.
+*TortoiseLabs-php* is a small and simple library for accessing [TortoiseLabs](http://tortois.es/)' API. TortoiseLabs-php is made with only one file, and should be easy to use for controlling your account through the API.
 
 ### How do I use it?
 
@@ -29,8 +29,17 @@ Inside these classes, you can call functions listed in the [API](http://wiki.tor
 ### Examples
 
 ```php
+// Print data about all your vps', set the nickname of your first VPS to 'Personal_VPS'
 $tl = new TortoiseLabs('nasonfish', '12345');
 var_dump($data = $tl->vps->list_all()); // All my information about my VPS'
 $id = $data['vpslist'][0]['id'];
 $tl->vps->setNickname($id, 'Personal_VPS');
+```
+```php
+// Enable Monitoring on all your servers
+$tl = new TortoiseLabs('nasonfish', '12345');
+$list = $tl->vps->list_my();
+foreach($list as $id => $name){
+    $tl->vps->monitoring_enable($id)
+}
 ```
