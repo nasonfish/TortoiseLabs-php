@@ -397,4 +397,81 @@ class DNS {
     public function __construct(TortoiseLabs $tl){
         $this->tl = $tl;
     }
+
+    /**
+     * List all DNS zones linked to your account
+     * @return array Zones and information about them
+     */
+    public function zones(){
+        return $this->tl->json_get('/dns/zones');
+    }
+
+    /**
+     * Get information about a specific DNS Zone
+     * @param $id int Zone ID
+     * @return array Zone information
+     */
+    public function zone($id){
+        return $this->tl->json_get('/dns/zone/' . $id);
+    }
+
+    /**
+     * Create a new DNS zone with a domain name
+     * @param $domain_name string Your domain name
+     * @return array Information about the newly created DNS zone
+     */
+    public function zone_new($domain_name){
+        return $this->tl->json_post('/dns/zone/new', array('domain_name'=>$domain_name));
+    }
+
+    /**
+     * Delete a DNS Zone.
+     * @param $id int The Zone ID
+     * @return array see zones() - information about all your zones
+     */
+    public function zone_delete($id){
+        return $this->tl->json_get('/dns/zone/' . $id . '/delete');
+    }
+
+    /**
+     * Create a new record for the specified zone with the specified options.
+     * @param $id int ID of the zone you're adding the record to
+     * @param $subdomain string Sub-domain - the information before the dot before your domain name
+     * @param $type string The type of record - A, AAAA, MX, etc
+     * @param $ttl int Time To Live
+     * @param $priority int Priority
+     * @param $content string The content of the record - i.e. the IP in an A record, the text in a TXT record, etc
+     * @return array Information about all of the existing records
+     */
+    public function zone_new_record($id, $subdomain, $type = 'A', $ttl = 300, $priority = 0, $content){
+        return $this->tl->json_post('/dns/zone/' . $id . '/record/new', array(
+            'subdomain'=>$subdomain,
+            'type'=>$type,
+            'ttl'=>$ttl,
+            'prio'=>$priority,
+            'content'=>$content
+        ));
+    }
+
+    /**
+     * Modify an existing record in a zone's subdomain and content
+     * @param $id int Zone ID
+     * @param $record_id int Record ID
+     * @param $subdomain string The Sub-Domain - the information before the dot before your domain name
+     * @param $content string the Information that the record holds
+     * @return array Information about all of the existing records
+     */
+    public function zone_modify_record($id, $record_id, $subdomain, $content){
+        return $this->tl->json_post('/dns/zone/' . $id . '/record/' . $record_id, array('subdomain'=>$subdomain, 'content'=>$content));
+    }
+
+    /**
+     * Delete an existing record in a zone
+     * @param $id int ID of the zone
+     * @param $record_id int ID of the record
+     * @return array information about all of the existing records
+     */
+    public function zone_delete_record($id, $record_id){
+        return $this->tl->json_get('/dns/zone/' . $id . '/record/' . $record_id . '/delete');
+    }
 }
