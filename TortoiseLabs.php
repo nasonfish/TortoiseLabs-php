@@ -311,6 +311,52 @@ class Support {
     public function __construct(TortoiseLabs $tl){
         $this->tl = $tl;
     }
+
+    /**
+    * Get all tickets associated with your account
+    * @return array of tickets and their information
+    */
+    public function tickets(){
+        return $this->tl->json_get('/support/tickets');
+    }
+
+    /**
+     * Create a new ticket with your subject and message
+     * @param $subject string Subject of the ticket
+     * @param $message string Your message you're sending in for support with.
+     * @return array See ticket() - it redirects. (information about the new ticket)
+     */
+    public function ticket_new($subject, $message){
+        return $this->tl->json_post('/support/ticket/new', array('subject'=>$subject,'message'=>$message));
+    }
+
+    /**
+     * Get information about a ticket
+     * @param $id int ID of the ticket you want to view information of
+     * @return array Ticket information
+     */
+    public function ticket($id){
+        return $this->tl->json_get('/support/ticket/' . $id);
+    }
+
+    /**
+     * Add a new reply to a ticket
+     * @param $id int Ticket ID
+     * @param $message string Your reply
+     * @return array All ticket information, tickets()
+     */
+    public function ticket_reply($id, $message){
+        return $this->tl->json_post('/support/ticket/' . $id, array('message'=>$message));
+    }
+
+    /**
+     * Close a ticket from its ID
+     * @param $id int ID of your ticket
+     * @return array All ticket information, tickets()
+     */
+    public function ticket_close($id){
+        return $this->tl->json_get('/support/ticket/' . $id . '/close');
+    }
 }
 class Invoice {
     private $tl;
