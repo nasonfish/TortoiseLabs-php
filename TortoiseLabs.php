@@ -3,7 +3,7 @@ class TortoiseLabs{
 
     public $vps;
     public $support;
-    public $invoice;
+    public $billing;
     public $dns;
 
     private $username;
@@ -19,7 +19,7 @@ class TortoiseLabs{
         $this->password = $key;
         $this->vps = new VPS($this);
         $this->support = new Support($this);
-        $this->invoice = new Invoice($this);
+        $this->billing = new Billing($this);
         $this->dns = new DNS($this);
     }
 
@@ -358,11 +358,37 @@ class Support {
         return $this->tl->json_get('/support/ticket/' . $id . '/close');
     }
 }
-class Invoice {
+class Billing {
     private $tl;
 
     public function __construct(TortoiseLabs $tl){
         $this->tl = $tl;
+    }
+
+    /**
+     * List all invoices on your account
+     * @return array Array of invoices
+     */
+    public function invoice_list(){
+        return $this->tl->json_get('/invoice/list');
+    }
+
+    /**
+     * Get all information about a certain invoice
+     * @param $id int Invoice ID
+     * @return array Invoice information
+     */
+    public function invoice($id){
+        return $this->tl->json_get('/invoice/' . $id);
+    }
+
+    /**
+     * Add a certain amount of service credit to your account
+     * @param $amount int Invoice amount
+     * @return array Invoice information of the generated invoice
+     */
+    public function add_credit($amount){
+        return $this->tl->json_post('/invoice/svccredit', array('creditamt'=>$amount));
     }
 }
 class DNS {
